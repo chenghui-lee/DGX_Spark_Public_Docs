@@ -1,3 +1,7 @@
+> **☕ Support my work**
+>
+> If this project has helped you, consider supporting my work on [**Buy Me a Coffee**](https://buymeacoffee.com/j6oiubzfnh).
+
 # DGX Spark Public Docs
 
 Public notes, configurations, dashboards, and performance-observability resources for getting more out of the **NVIDIA DGX Spark**.
