@@ -111,17 +111,19 @@ The dashboard is intentionally designed to make it easy to compare **model behav
 
 The top strip includes estimated cloud-equivalent inference cost alongside estimated local DGX Spark electricity cost for the selected Grafana time range.
 
-The included dashboard currently models example cloud tiers using:
+The included dashboard currently models cache-aware example cloud tiers using:
 
-| Estimate | Input | Output |
-|---|---:|---:|
-| Ultra cloud | $5 / 1M tokens | $25 / 1M tokens |
-| Mid cloud | $3 / 1M tokens | $15 / 1M tokens |
-| Low cloud | $1 / 1M tokens | $5 / 1M tokens |
+| Estimate | Cache hit/read | New prefill/write proxy | Output |
+|---|---:|---:|---:|
+| Ultra cloud | $0.50 / 1M | $6.25 / 1M | $25 / 1M |
+| Mid cloud | $0.30 / 1M | $3.75 / 1M | $15 / 1M |
+| Low cloud | $0.10 / 1M | $1.25 / 1M | $5 / 1M |
 
-The local-energy panel currently estimates DGX Spark energy cost using **240 W** and **$0.151/kWh**.
+Cache-read tokens come from `vllm:prompt_tokens_cached_total`. Cache-write tokens are estimated from `vllm:request_prefill_kv_computed_tokens_sum`, which counts newly computed KV tokens during prefill. That is a useful local proxy, but it is not a cloud provider billing record. Output comes from `vllm:generation_tokens_total`.
 
-These are comparison assumptions, not universal provider pricing. Change the PromQL expressions to match your electricity rate, measured power draw, and cloud/API pricing.
+The write prices assume a 5-minute prompt-cache write at 1.25 times the former base input rates; cache hits assume 0.1 times those rates. The local-energy panel uses the Singapore SP regulated household tariff for **1 July–30 September 2026**: **S$0.3478/kWh including 9% GST**. At the **16 September 2026** exchange rate of **0.7853 USD/SGD**, this is **US$0.27312734/kWh**. The estimate assumes a constant **240 W** draw.
+
+These are comparison assumptions, not universal provider pricing. Change the PromQL expressions to match your electricity rate, measured power draw, cache duration, and cloud/API pricing.
 
 ---
 
@@ -181,12 +183,47 @@ The dashboard assumes you already have the basic observability pipeline running:
 - **Grafana**
 - **Node Exporter** for host/system metrics
 
+The included Docker Compose stack provides Prometheus, Grafana, and Node Exporter. vLLM remains on the host so it can keep direct access to the DGX Spark GPU.
+
 The current dashboard definition was authored with Grafana visualization components reporting version `13.1.0`.
 
 > [!IMPORTANT]
 > The dashboard currently references a Prometheus datasource UID of `dfr1d9ottv8xsc`.
 >
 > Your Grafana Prometheus datasource will almost certainly have a different UID. Replace that datasource UID in the dashboard definition with the UID from your Grafana instance if necessary.
+
+The included Compose setup provisions this UID automatically, so no replacement is needed when using it.
+
+---
+
+## Quick Start with Docker Compose
+
+The default configuration scrapes vLLM at `http://host.docker.internal:18300/metrics` and starts the complete dashboard stack:
+
+```bash
+docker compose up -d
+```
+
+Open Grafana at [http://localhost:3000](http://localhost:3000) and sign in with `admin` / `admin`. Grafana prompts you to change the default password. The DGX Spark dashboard and Prometheus datasource are provisioned automatically.
+
+Check that both scrape targets are healthy at [http://localhost:9090/targets](http://localhost:9090/targets).
+
+To choose a different Grafana password or host ports, set environment variables before starting the stack:
+
+```bash
+GRAFANA_ADMIN_PASSWORD='choose-a-strong-password' \
+GRAFANA_PORT=3000 \
+PROMETHEUS_PORT=9090 \
+docker compose up -d
+```
+
+Prometheus data is retained for 30 days by default. Override it with `PROMETHEUS_RETENTION`, for example `PROMETHEUS_RETENTION=7d`.
+
+Stop the containers without deleting collected data:
+
+```bash
+docker compose down
+```
 
 ---
 
@@ -380,8 +417,11 @@ For interactive coding agents, for example, output throughput may matter alongsi
 ```text
 DGX_Spark_Public_Docs/
 │
+├── compose.yaml
 ├── README.md
-│
+├── observability/
+│   ├── grafana/provisioning/
+│   └── prometheus/prometheus.yml
 └── Grafana_Dashboards/
     └── vllm_25.1/
         └── dgx_spark_vllm_grafana_v1.yaml

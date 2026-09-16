@@ -1,4 +1,10 @@
 {
+  "apiVersion": "dashboard.grafana.app/v2beta1",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "dgx-spark-vllm"
+  },
+  "spec": {
   "annotations": [
     {
       "kind": "AnnotationQuery",
@@ -126,7 +132,7 @@
                     "kind": "DataQuery",
                     "spec": {
                       "editorMode": "code",
-                      "expr": "((sum(increase(vllm:prompt_tokens_total[$__range]))) * 5 + (sum(increase(vllm:generation_tokens_total[$__range]))) * 25) / 1000000",
+                      "expr": "((sum(increase(vllm:prompt_tokens_cached_total[$__range])) * 0.50) + (sum(increase(vllm:request_prefill_kv_computed_tokens_sum[$__range])) * 6.25) + (sum(increase(vllm:generation_tokens_total[$__range])) * 25)) / 1000000",
                       "legendFormat": "Ultra cloud",
                       "range": true
                     },
@@ -140,7 +146,7 @@
             "transformations": []
           }
         },
-        "description": "Opus-class cloud equivalent for selected range: $5 input / $25 output per 1M tokens.",
+        "description": "Cache-aware Opus-class estimate for the selected range: $0.50 cache hits / $6.25 new-prefill cache-write proxy / $25 output per 1M tokens. New-prefill tokens are vLLM KV computations, not provider billing records.",
         "id": 101,
         "links": [],
         "title": "",
@@ -210,7 +216,7 @@
                     "kind": "DataQuery",
                     "spec": {
                       "editorMode": "code",
-                      "expr": "((sum(increase(vllm:prompt_tokens_total[$__range]))) * 3 + (sum(increase(vllm:generation_tokens_total[$__range]))) * 15) / 1000000",
+                      "expr": "((sum(increase(vllm:prompt_tokens_cached_total[$__range])) * 0.30) + (sum(increase(vllm:request_prefill_kv_computed_tokens_sum[$__range])) * 3.75) + (sum(increase(vllm:generation_tokens_total[$__range])) * 15)) / 1000000",
                       "legendFormat": "Mid cloud",
                       "range": true
                     },
@@ -224,7 +230,7 @@
             "transformations": []
           }
         },
-        "description": "Sonnet-class cloud equivalent for selected range: $3 input / $15 output per 1M tokens.",
+        "description": "Cache-aware Sonnet-class estimate for the selected range: $0.30 cache hits / $3.75 new-prefill cache-write proxy / $15 output per 1M tokens. New-prefill tokens are vLLM KV computations, not provider billing records.",
         "id": 102,
         "links": [],
         "title": "",
@@ -294,7 +300,7 @@
                     "kind": "DataQuery",
                     "spec": {
                       "editorMode": "code",
-                      "expr": "((sum(increase(vllm:prompt_tokens_total[$__range]))) * 1 + (sum(increase(vllm:generation_tokens_total[$__range]))) * 5) / 1000000",
+                      "expr": "((sum(increase(vllm:prompt_tokens_cached_total[$__range])) * 0.10) + (sum(increase(vllm:request_prefill_kv_computed_tokens_sum[$__range])) * 1.25) + (sum(increase(vllm:generation_tokens_total[$__range])) * 5)) / 1000000",
                       "legendFormat": "Low cloud",
                       "range": true
                     },
@@ -308,7 +314,7 @@
             "transformations": []
           }
         },
-        "description": "Haiku-class cloud equivalent for selected range: $1 input / $5 output per 1M tokens.",
+        "description": "Cache-aware Haiku-class estimate for the selected range: $0.10 cache hits / $1.25 new-prefill cache-write proxy / $5 output per 1M tokens. New-prefill tokens are vLLM KV computations, not provider billing records.",
         "id": 103,
         "links": [],
         "title": "",
@@ -378,8 +384,8 @@
                     "kind": "DataQuery",
                     "spec": {
                       "editorMode": "code",
-                      "expr": "vector((($__range_s) / 3600) * 0.240 * 0.151)",
-                      "legendFormat": "DGX energy",
+                      "expr": "vector((($__range_s) / 3600) * 0.240 * 0.27312734)",
+                      "legendFormat": "DGX energy (SG)",
                       "range": true
                     },
                     "version": "v0"
@@ -392,7 +398,7 @@
             "transformations": []
           }
         },
-        "description": "Estimated local electricity cost for selected range: 240W at $0.151/kWh.",
+        "description": "Estimated Singapore electricity cost in USD for the selected range: 240W at S$0.3478/kWh (SP regulated household tariff including 9% GST, 1 Jul–30 Sep 2026), converted at 0.7853 USD/SGD on 16 Sep 2026 = US$0.27312734/kWh.",
         "id": 104,
         "links": [],
         "title": "",
@@ -6344,4 +6350,5 @@
   },
   "title": "NVIDIA DGX Spark — Throughput Without Contention v8 Output TPS Trend + NVIDIA Refined Theme",
   "variables": []
+  }
 }
