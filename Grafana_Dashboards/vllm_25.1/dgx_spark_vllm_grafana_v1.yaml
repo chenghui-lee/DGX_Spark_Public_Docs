@@ -27,7 +27,7 @@
     }
   ],
   "cursorSync": "Crosshair",
-  "description": "vLLM + Node Exporter dashboard for DGX Spark/Qwen. Added an interactive output-tokens-per-second time-series near the top while retaining the top-row output TPS stat; moved speculative-decoding acceptance by position to the fifth row and request rate/success/errors to the following row. Includes the ultra-thin cloud-vs-local cost strip and NVIDIA-inspired visual theme: #76B900 green, dark gray, white, with amber/red reserved for operational warning states.",
+  "description": "vLLM + Node Exporter dashboard for DGX Spark/Qwen. Added an interactive output-tokens-per-second time-series near the top while retaining the top-row output TPS stat; moved speculative-decoding acceptance by position to the fifth row and request rate/success/errors to the following row. Includes the ultra-thin cloud-vs-local cost strip, a configurable Cloud API charge estimate, and NVIDIA-inspired visual theme: #76B900 green, dark gray, white, with amber/red reserved for operational warning states.",
   "editable": true,
   "elements": {
     "panel-1": {
@@ -419,6 +419,90 @@
                   "steps": [
                     {
                       "color": "#76B900",
+                      "value": 0
+                    }
+                  ]
+                },
+                "unit": "currencyUSD"
+              },
+              "overrides": []
+            },
+            "options": {
+              "colorMode": "value",
+              "graphMode": "none",
+              "justifyMode": "center",
+              "orientation": "horizontal",
+              "percentChangeColorMode": "standard",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "showPercentChange": false,
+              "textMode": "value_and_name",
+              "wideLayout": true
+            }
+          },
+          "version": "13.1.0"
+        }
+      }
+    },
+    "panel-105": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "dfr1d9ottv8xsc"
+                    },
+                    "group": "prometheus",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "code",
+                      "expr": "((clamp_min(sum(increase(vllm:prompt_tokens_total[$__range])) - sum(increase(vllm:prompt_tokens_cached_total[$__range])) - sum(increase(vllm:request_prefill_kv_computed_tokens_sum[$__range])), 0) * 0.15) + (sum(increase(vllm:prompt_tokens_cached_total[$__range])) * 0.016) + (sum(increase(vllm:request_prefill_kv_computed_tokens_sum[$__range])) * 0.20) + (sum(increase(vllm:generation_tokens_total[$__range])) * 0.47)) / 1000000",
+                      "legendFormat": "Cloud API charge",
+                      "range": true
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "Cache-aware Cloud API estimate for the selected range: $0.15 input / $0.47 output / $0.016 cache read / $0.20 cache write per 1M tokens. Cached tokens use the read rate, newly computed prefill tokens use the cache-write proxy rate, and any remaining prompt tokens use the input rate. New-prefill tokens are vLLM KV computations, not provider billing records.",
+        "id": 105,
+        "links": [],
+        "title": "",
+        "vizConfig": {
+          "group": "stat",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "fixedColor": "#73BFDB",
+                  "mode": "fixed"
+                },
+                "decimals": 2,
+                "noValue": "—",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#73BFDB",
                       "value": 0
                     }
                   ]
@@ -5770,7 +5854,7 @@
               "name": "panel-101"
             },
             "height": 2,
-            "width": 6,
+            "width": 5,
             "x": 0,
             "y": 0
           }
@@ -5783,8 +5867,8 @@
               "name": "panel-102"
             },
             "height": 2,
-            "width": 6,
-            "x": 6,
+            "width": 5,
+            "x": 5,
             "y": 0
           }
         },
@@ -5796,8 +5880,21 @@
               "name": "panel-103"
             },
             "height": 2,
-            "width": 6,
-            "x": 12,
+            "width": 4,
+            "x": 10,
+            "y": 0
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-105"
+            },
+            "height": 2,
+            "width": 5,
+            "x": 14,
             "y": 0
           }
         },
@@ -5809,8 +5906,8 @@
               "name": "panel-104"
             },
             "height": 2,
-            "width": 6,
-            "x": 18,
+            "width": 5,
+            "x": 19,
             "y": 0
           }
         },

@@ -119,9 +119,11 @@ The included dashboard currently models cache-aware example cloud tiers using:
 | Mid cloud | $0.30 / 1M | $3.75 / 1M | $15 / 1M |
 | Low cloud | $0.10 / 1M | $1.25 / 1M | $5 / 1M |
 
+An additional **Cloud API** panel uses **$0.15 input**, **$0.47 output**, **$0.016 cache read**, and **$0.20 cache write** per 1M tokens. Cached tokens use the read rate, newly computed prefill tokens use the cache-write proxy rate, and any remaining prompt tokens use the input rate.
+
 Cache-read tokens come from `vllm:prompt_tokens_cached_total`. Cache-write tokens are estimated from `vllm:request_prefill_kv_computed_tokens_sum`, which counts newly computed KV tokens during prefill. That is a useful local proxy, but it is not a cloud provider billing record. Output comes from `vllm:generation_tokens_total`.
 
-The write prices assume a 5-minute prompt-cache write at 1.25 times the former base input rates; cache hits assume 0.1 times those rates. The local-energy panel uses the Singapore SP regulated household tariff for **1 July–30 September 2026**: **S$0.3478/kWh including 9% GST**. At the **16 September 2026** exchange rate of **0.7853 USD/SGD**, this is **US$0.27312734/kWh**. The estimate assumes a constant **240 W** draw.
+For the three example tiers, the write prices assume a 5-minute prompt-cache write at 1.25 times the former base input rates; cache hits assume 0.1 times those rates. The local-energy panel uses the Singapore SP regulated household tariff for **1 July–30 September 2026**: **S$0.3478/kWh including 9% GST**. At the **16 September 2026** exchange rate of **0.7853 USD/SGD**, this is **US$0.27312734/kWh**. The estimate assumes a constant **240 W** draw.
 
 These are comparison assumptions, not universal provider pricing. Change the PromQL expressions to match your electricity rate, measured power draw, cache duration, and cloud/API pricing.
 
