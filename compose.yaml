@@ -41,6 +41,9 @@ services:
     command:
       - --path.rootfs=/host
       - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($$|/)
+      # The GB10 firmware-backed cpufreq reads can block, which hangs scrapes and
+      # exhausts node-exporter's request slots (HTTP 503 / scrape timeouts).
+      - --no-collector.cpufreq
     pid: host
     volumes:
       - /:/host:ro,rslave
